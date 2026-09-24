@@ -66,3 +66,21 @@ def count_orders(db_path=None):
     with closing(connect(db_path)) as connection:
         cursor = connection.execute("SELECT COUNT(*) AS n FROM orders")
         return cursor.fetchone()["n"]
+
+
+def get_order(order_id, db_path=None):
+    """Возвращает одну заявку по номеру (или None)."""
+    with closing(connect(db_path)) as connection:
+        cursor = connection.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
+        row = cursor.fetchone()
+        return dict(row) if row is not None else None
+
+
+def update_status(order_id, status, db_path=None):
+    """Меняет статус заявки. Возвращает число изменённых строк (0 или 1)."""
+    with closing(connect(db_path)) as connection:
+        cursor = connection.execute(
+            "UPDATE orders SET status = ? WHERE id = ?", (status, order_id)
+        )
+        connection.commit()
+        return cursor.rowcount

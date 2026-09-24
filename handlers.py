@@ -7,7 +7,7 @@ from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 
 import keyboards
 import storage
@@ -132,22 +132,47 @@ async def order_finish(message: Message, state: FSMContext):
             pass
 
 
+def format_order(order):
+    """Собирает текст одной заявки для показа админу."""
+    return (
+        "№" + str(order["id"]) + " · " + order["status"] + " · " + order["created_at"] + "\n"
+        + order["name"] + " · " + order["contact"] + "\n"
+        + order["description"]
+    )
+
+
 @router.message(Command("admin"))
 async def admin(message: Message):
     if message.from_user.id not in get_admin_ids():
         await message.answer("Команда доступна только администратору.")
         return
 
-    orders = storage.list_orders(limit=10)
+    orders = storage.list_orders(limit=5)
     if not orders:
         await message.answer("Заявок пока нет.")
         return
 
-    blocks = []
+    await message.answer("Последние заявки. Нажмите статус, чтобы изменить его.")
     for order in orders:
-        blocks.append(
-            "№" + str(order["id"]) + " · " + order["status"] + " · " + order["created_at"] + "\n"
-            + order["name"] + " · " + order["contact"] + "\n"
-            + order["description"]
+        await message.answer(
+            format_order(order),
+            reply_markup=keyboards.status_keyboard(order["id"]),
         )
-    await message.answer("Последние заявки:\n\n" + "\n\n".join(blocks))
+
+
+@router.callback_query(F.data.startswith("status:"))
+async def set_status(callback: CallbackQuery):
+    if callback.from_user.id not in get_admin_ids():
+        await callback.answer("Только для администратора", show_alert=True)
+        return
+
+    _prefix, order_id, status = callback.data.split(":", 2)
+    storage.update_status(int(order_id), status)
+
+    order = storage.get_order(int(order_id))
+    if order is not None:
+        await callback.message.edit_text(
+            format_order(order),
+            reply_markup=keyboards.status_keyboard(int(order_id)),
+        )
+    await callback.answer("Статус: " + status)

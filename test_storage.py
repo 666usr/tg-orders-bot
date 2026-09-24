@@ -32,6 +32,16 @@ class TestStorage(unittest.TestCase):
         orders = storage.list_orders(self.path)
         self.assertEqual(orders[0]["status"], "новая")
 
+    def test_update_status(self):
+        order_id = storage.add_order(1, "a", "Анна", "1", "текст", db_path=self.path)
+        changed = storage.update_status(order_id, "в работе", db_path=self.path)
+        self.assertEqual(changed, 1)
+        order = storage.get_order(order_id, db_path=self.path)
+        self.assertEqual(order["status"], "в работе")
+
+    def test_get_missing_order_returns_none(self):
+        self.assertIsNone(storage.get_order(999, db_path=self.path))
+
 
 if __name__ == "__main__":
     unittest.main()
