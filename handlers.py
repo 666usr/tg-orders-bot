@@ -7,8 +7,9 @@ from aiogram import F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, FSInputFile, Message
 
+import export
 import keyboards
 import storage
 from config import get_admin_ids
@@ -176,3 +177,20 @@ async def set_status(callback: CallbackQuery):
             reply_markup=keyboards.status_keyboard(int(order_id)),
         )
     await callback.answer("Статус: " + status)
+
+
+@router.message(Command("export"))
+async def export_orders(message: Message):
+    if message.from_user.id not in get_admin_ids():
+        await message.answer("Команда доступна только администратору.")
+        return
+
+    if storage.count_orders() == 0:
+        await message.answer("Заявок пока нет - экспортировать нечего.")
+        return
+
+    path = export.export_orders_to_xlsx("orders_export.xlsx")
+    await message.answer_document(
+        FSInputFile(path),
+        caption="Экспорт заявок в Excel",
+    )
