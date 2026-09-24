@@ -26,6 +26,15 @@ def get_token():
     return token
 
 
+def get_proxy():
+    """Адрес прокси для подключения к Telegram (или пустая строка).
+
+    Пригодится, если прямой доступ к Telegram заблокирован.
+    Пример: http://127.0.0.1:10809
+    """
+    return os.environ.get("BOT_PROXY", "").strip()
+
+
 def get_admin_ids():
     """Возвращает список id администраторов (из переменной ADMIN_IDS)."""
     raw = os.environ.get("ADMIN_IDS", "")

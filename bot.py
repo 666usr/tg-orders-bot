@@ -7,6 +7,7 @@
 import asyncio
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.session.aiohttp import AiohttpSession
 from aiogram.exceptions import (
     TelegramConflictError,
     TelegramNetworkError,
@@ -15,10 +16,15 @@ from aiogram.exceptions import (
 
 import handlers
 import storage
-from config import get_token
+from config import get_proxy, get_token
 
 
 def create_bot():
+    proxy = get_proxy()
+    if proxy:
+        # Если задан прокси (например, локальный VPN-клиент),
+        # подключаемся к Telegram через него.
+        return Bot(get_token(), session=AiohttpSession(proxy=proxy))
     return Bot(get_token())
 
 
