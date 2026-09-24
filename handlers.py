@@ -54,24 +54,50 @@ async def contacts(message: Message):
     )
 
 
+@router.message(F.text == "Отменить")
+async def cancel(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        "Действие отменено. Вы в главном меню.",
+        reply_markup=keyboards.main_menu(),
+    )
+
+
 @router.message(F.text == "Оставить заявку")
 async def order_start(message: Message, state: FSMContext):
     await state.set_state(OrderForm.name)
-    await message.answer("Как вас зовут?")
+    await message.answer(
+        "Как вас зовут? (или нажмите «Отменить»)",
+        reply_markup=keyboards.cancel_keyboard(),
+    )
 
 
 @router.message(OrderForm.name)
 async def order_name(message: Message, state: FSMContext):
-    await state.update_data(name=message.text.strip())
+    name = message.text.strip()
+    if len(name) < 2:
+        await message.answer("Имя слишком короткое. Напишите, пожалуйста, ещё раз.")
+        return
+    await state.update_data(name=name)
     await state.set_state(OrderForm.contact)
-    await message.answer("Как с вами связаться? (телефон, почта или @username)")
+    await message.answer(
+        "Как с вами связаться? (телефон, почта или @username)",
+        reply_markup=keyboards.cancel_keyboard(),
+    )
 
 
 @router.message(OrderForm.contact)
 async def order_contact(message: Message, state: FSMContext):
-    await state.update_data(contact=message.text.strip())
+    contact = message.text.strip()
+    if len(contact) < 3:
+        await message.answer("Контакт слишком короткий. Напишите, пожалуйста, ещё раз.")
+        return
+    await state.update_data(contact=contact)
     await state.set_state(OrderForm.description)
-    await message.answer("Опишите задачу в паре предложений.")
+    await message.answer(
+        "Опишите задачу в паре предложений.",
+        reply_markup=keyboards.cancel_keyboard(),
+    )
 
 
 @router.message(OrderForm.description)
