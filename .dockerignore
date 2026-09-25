@@ -1,0 +1,17 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Секреты и данные не попадают в образ
+.env
+*.db
+orders_export.xlsx
+
+# Не нужно внутри образа
+.git/
+.gitignore
+.gitattributes
+docs/
+*.md
