@@ -1,0 +1,21 @@
+[Unit]
+Description=Telegram orders bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Замените YOUR_USER и YOUR_PATH на свои значения:
+#   YOUR_USER - пользователь сервера (для root это root)
+#   YOUR_PATH - полный путь к папке проекта (например, /root/tg-orders-bot)
+User=YOUR_USER
+WorkingDirectory=YOUR_PATH
+ExecStart=YOUR_PATH/.venv/bin/python YOUR_PATH/bot.py
+
+# Автоперезапуск при сбое
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
